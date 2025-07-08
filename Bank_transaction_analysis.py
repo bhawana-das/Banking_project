@@ -4,6 +4,10 @@ import high_spending_app1, transaction_channel_app2, transaction_volume_app3, cu
 
 st.set_page_config(page_title="Banking Project", layout="wide")
 
+def run():
+    st.title("Banking Project")
+    st.write("Welcome to Bank transaction analysis app!")
+
 # Navigation
 with st.sidebar:
     selected = option_menu(
