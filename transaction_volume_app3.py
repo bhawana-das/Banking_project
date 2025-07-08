@@ -5,6 +5,10 @@ from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 
+def run():
+    st.title("Transaction volume Prediction - Use Case 3")
+    st.write("Welcome to Use Case 3 App!")
+
 st.title("Transaction Volume Forecasting Using Date Ordinal")   # Display app title
 
 # File uploader widget to upload CSV with required columns
