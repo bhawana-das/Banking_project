@@ -8,6 +8,10 @@ from sklearn.metrics import classification_report, accuracy_score  # Model evalu
 import matplotlib.pyplot as plt  # Plotting
 import seaborn as sns  # Statistical plots
 
+def run():
+    st.title("Fraud Detection Prediction - Use Case 5")
+    st.write("Welcome to Use Case 5 App!")
+
 # --- Streamlit app configuration ---
 st.set_page_config(page_title="🚨 Fraud / Outlier Detection", layout="wide")  # Set app title and layout
 st.title("🚨 Fraud / Outlier Detection using ML Models")  # Main title

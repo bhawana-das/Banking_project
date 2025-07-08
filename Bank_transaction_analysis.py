@@ -9,7 +9,6 @@ with st.sidebar:
     selected = option_menu(
         menu_title="Main Menu",
         options=["Use Case 1", "Use Case 2", "Use Case 3", "Use Case 4", "Use Case 5"],
-        icons=["1-circle", "2-circle", "3-circle", "4-circle", "5-circle"],
         default_index=0,
     )
 

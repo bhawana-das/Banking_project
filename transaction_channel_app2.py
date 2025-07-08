@@ -27,6 +27,10 @@ import matplotlib.pyplot as plt
 # Import seaborn for advanced visualizations
 import seaborn as sns
 
+def run():
+    st.title("Transaction channel Prediction - Use Case 2")
+    st.write("Welcome to Use Case 2 App!")
+
 
 # Set the title and icon of the Streamlit web app
 st.set_page_config(page_title="Transaction Channel Predictor", page_icon="🔍")

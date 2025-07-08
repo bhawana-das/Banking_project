@@ -8,6 +8,10 @@ from sklearn.decomposition import PCA  # For dimensionality reduction
 import matplotlib.pyplot as plt  # For plotting
 import seaborn as sns  # For enhanced visualizations
 
+def run():
+    st.title("Customer segmentation Prediction - Use Case 4")
+    st.write("Welcome to Use Case 4 App!")
+
 # --- Configure the Streamlit app ---
 st.set_page_config(page_title="🧑‍🤝‍🧑 Customer Segmentation", layout="wide")
 

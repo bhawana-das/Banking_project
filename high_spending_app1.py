@@ -10,6 +10,10 @@ from sklearn.preprocessing import StandardScaler  # For feature scaling
 import matplotlib.pyplot as plt  # For plotting
 import pickle  # For saving/loading models (not used in this code)
 
+def run():
+    st.title("High Spending Prediction - Use Case 1")
+    st.write("Welcome to Use Case 1 App!")
+
 # --- Configure the Streamlit app ---
 st.set_page_config(page_title="Banking Transaction Analysis", layout="wide")  # Set page title and layout to wide
 
