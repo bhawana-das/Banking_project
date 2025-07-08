@@ -1,89 +1,80 @@
-# --- Import necessary libraries ---
-import streamlit as st  # For building interactive web apps
-import pandas as pd  # For data manipulation
-import numpy as np  # For numerical operations
-from sklearn.ensemble import IsolationForest, RandomForestClassifier  # ML models
-from sklearn.preprocessing import StandardScaler  # Feature scaling
-from sklearn.metrics import classification_report, accuracy_score  # Model evaluation
-import matplotlib.pyplot as plt  # Plotting
-import seaborn as sns  # Statistical plots
+# File: fraud_detection_app5.py
+
+import streamlit as st
+import pandas as pd
+import numpy as np
+from sklearn.ensemble import IsolationForest, RandomForestClassifier
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import classification_report, accuracy_score
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 def run():
-    st.title("Fraud Detection Prediction - Use Case 5")
-    st.write("Welcome to Use Case 5 App!")
+    st.title("🚨 Fraud / Outlier Detection - Use Case 5")
+    st.markdown("Detect suspicious transactions using machine learning models.")
 
-# --- Streamlit app configuration ---
-st.set_page_config(page_title="🚨 Fraud / Outlier Detection", layout="wide")  # Set app title and layout
-st.title("🚨 Fraud / Outlier Detection using ML Models")  # Main title
-st.markdown("Detect suspicious banking transactions using Isolation Forest (unsupervised) and Random Forest (supervised, if labels exist).")  # Description
+    # File upload
+    uploaded_file = st.file_uploader("📂 Upload your transaction dataset (CSV)", type=["csv"])
 
-# --- File upload section ---
-uploaded_file = st.file_uploader("📂 Upload transaction dataset (CSV)", type=["csv"])  # Upload CSV file
+    if uploaded_file is not None:
+        df = pd.read_csv(uploaded_file)
+        st.subheader("📄 Data Preview")
+        st.dataframe(df.head())
 
-# --- Check if file is uploaded ---
-if uploaded_file:
-    df = pd.read_csv(uploaded_file)  # Read CSV into DataFrame
-    st.subheader("🔍 Data Preview")  # Subheading for data preview
-    st.dataframe(df.head())  # Show first few rows of data
+        # Feature selection
+        st.subheader("🧮 Select Numeric Features for Detection")
+        numeric_cols = df.select_dtypes(include=np.number).columns.tolist()
+        selected_features = st.multiselect("Select at least two features", numeric_cols, default=numeric_cols)
 
-    # --- Feature selection for analysis ---
-    st.subheader("🧮 Select Features for Analysis")  # Subheading for feature selection
-    numeric_cols = df.select_dtypes(include=np.number).columns.tolist()  # Get numerical columns
-    selected_features = st.multiselect("Select numerical features:", numeric_cols, default=numeric_cols)  # Allow user to select features
+        if len(selected_features) < 2:
+            st.warning("⚠️ Please select at least two numeric features to continue.")
+            st.stop()
 
-    # --- Validation: at least two features required ---
-    if len(selected_features) < 2:
-        st.warning("⚠️ Please select at least two features.")  # Warning if not enough features selected
-        st.stop()  # Stop execution if validation fails
+        X = df[selected_features].dropna()
+        scaler = StandardScaler()
+        X_scaled = scaler.fit_transform(X)
 
-    # --- Data preparation ---
-    X = df[selected_features].dropna()  # Remove rows with missing values in selected features
-    scaler = StandardScaler()  # Initialize standard scaler
-    X_scaled = scaler.fit_transform(X)  # Scale selected features
+        # --- Isolation Forest ---
+        st.subheader("🌲 Isolation Forest (Unsupervised)")
+        contamination = st.slider("Expected Anomaly Ratio", 0.01, 0.10, 0.02, step=0.01)
+        iso_model = IsolationForest(contamination=contamination, random_state=42)
+        df['anomaly_score'] = iso_model.fit_predict(X_scaled)
+        df['anomaly_flag'] = (df['anomaly_score'] == -1).astype(int)
 
-    # --- Unsupervised model: Isolation Forest for anomaly detection ---
-    st.subheader("🌲 Isolation Forest (Unsupervised Anomaly Detection)")  # Subheading for Isolation Forest
-    contamination = st.slider("Expected % of anomalies", 0.01, 0.10, 0.02, step=0.01)  # Slider to choose contamination rate
-    iso = IsolationForest(contamination=contamination, random_state=42)  # Initialize Isolation Forest
-    df['anomaly_score'] = iso.fit_predict(X_scaled)  # Fit model and get predictions (-1 = anomaly)
-    df['anomaly_flag'] = (df['anomaly_score'] == -1).astype(int)  # Convert to binary flag (1 = anomaly)
+        st.write(f"🔎 Total Anomalies Detected: {df['anomaly_flag'].sum()} out of {len(df)}")
 
-    # --- Show anomaly count ---
-    st.write(f"🔎 Detected Anomalies: {df['anomaly_flag'].sum()} out of {len(df)} rows")  # Display number of anomalies
+        # Anomaly plot
+        fig, ax = plt.subplots()
+        sns.countplot(data=df, x='anomaly_flag', ax=ax)
+        ax.set_title("Anomaly Flag Distribution")
+        ax.set_xlabel("Anomaly Flag (1 = Outlier)")
+        st.pyplot(fig)
 
-    # --- Plot anomaly distribution ---
-    fig, ax = plt.subplots()  # Create matplotlib figure
-    sns.countplot(data=df, x='anomaly_flag', ax=ax)  # Bar plot of anomaly counts
-    ax.set_title("Anomaly Distribution (Isolation Forest)")  # Set plot title
-    ax.set_xlabel("Anomaly (1 = Fraud/Outlier)")  # X-axis label
-    st.pyplot(fig)  # Show plot in Streamlit
+        # --- Random Forest if labels exist ---
+        if 'is_fraud' in df.columns:
+            st.subheader("🧠 Random Forest (Supervised)")
+            rf_model = RandomForestClassifier(n_estimators=100, random_state=42)
+            rf_model.fit(X_scaled, df['is_fraud'])
+            df['predicted_fraud'] = rf_model.predict(X_scaled)
 
-    # --- Optional: Supervised model (Random Forest) if 'is_fraud' label exists ---
-    if 'is_fraud' in df.columns:
-        st.subheader("🧠 Random Forest (Supervised - Labeled Fraud)")  # Subheading for supervised learning
-        clf = RandomForestClassifier(n_estimators=100, random_state=42)  # Initialize Random Forest
-        clf.fit(X_scaled, df['is_fraud'])  # Train model on scaled features and labels
-        df['predicted_fraud'] = clf.predict(X_scaled)  # Predict fraud labels
+            acc = accuracy_score(df['is_fraud'], df['predicted_fraud'])
+            st.success(f"✅ Accuracy: {acc*100:.2f}%")
 
-        # --- Show accuracy and classification report ---
-        acc = accuracy_score(df['is_fraud'], df['predicted_fraud'])  # Calculate accuracy
-        st.success(f"✅ Accuracy: {acc*100:.2f}%")  # Display accuracy
-        st.text("Classification Report:")  # Display label
-        st.text(classification_report(df['is_fraud'], df['predicted_fraud']))  # Show detailed report
+            st.text("Classification Report:")
+            st.text(classification_report(df['is_fraud'], df['predicted_fraud']))
 
-        # --- Plot predicted fraud counts ---
-        fig2, ax2 = plt.subplots()  # Create another figure
-        sns.countplot(data=df, x='predicted_fraud', ax=ax2)  # Plot predicted fraud distribution
-        ax2.set_title("Predicted Fraud Distribution (Random Forest)")  # Title
-        ax2.set_xlabel("Predicted Fraud (1 = Fraud)")  # Label
-        st.pyplot(fig2)  # Display plot
+            # Plot prediction
+            fig2, ax2 = plt.subplots()
+            sns.countplot(data=df, x='predicted_fraud', ax=ax2)
+            ax2.set_title("Predicted Fraud Distribution")
+            st.pyplot(fig2)
+        else:
+            st.info("ℹ️ 'is_fraud' label not found. Supervised model skipped.")
+
+        # Download output
+        st.subheader("⬇️ Download Results")
+        csv = df.to_csv(index=False).encode('utf-8')
+        st.download_button("Download CSV with Anomaly Flags", csv, file_name="fraud_detection_output.csv", mime='text/csv')
 
     else:
-        st.info("📌 No 'is_fraud' label found — skipping supervised model.")  # Inform user if label missing
-
-    # --- Download button for results ---
-    csv = df.to_csv(index=False).encode('utf-8')  # Convert DataFrame to CSV bytes
-    st.download_button("⬇️ Download Result with Anomaly Labels", csv, file_name="fraud_detection_results.csv", mime='text/csv')  # Download button
-
-else:
-    st.info("📁 Please upload a CSV file with transaction data to begin.")  # Prompt user to upload file
+        st.info("📁 Please upload a CSV file to get started.")
