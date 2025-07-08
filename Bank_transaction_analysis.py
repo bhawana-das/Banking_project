@@ -2,6 +2,9 @@ import streamlit as st
 from streamlit_option_menu import option_menu
 import high_spending_app1, transaction_channel_app2, transaction_volume_app3, customer_segmentation_app4, fraud_detection_app5
 
+def run():
+    st.title("Banking Project")
+    st.write("Welcome to Bank transaction analysis app!")
 st.set_page_config(page_title="Banking Project", layout="wide")
 
 # Navigation
